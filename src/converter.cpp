@@ -23,11 +23,14 @@ namespace Cnvt
 
 	}
 
-	int CConverter::Open(std::string strFlvFile)
+	int CConverter::Open(std::string strFlvFile, int bHaveAudio, int bHaveVideo)
 	{
 		_fileOut.open(strFlvFile, std::ios_base::out | std::ios_base::binary);
 		if (!_fileOut)
 			return 0;
+
+		_bHaveAudio = bHaveAudio;
+		_bHaveVideo = bHaveVideo;
 
 		MakeFlvHeader(_FlvHeader);
 
@@ -41,13 +44,13 @@ namespace Cnvt
 		if (_pPPS != NULL)
 			delete _pPPS;
 
-		WriteEndofSeq();
+		WriteH264EndofSeq();
 		_fileOut.close();
 
 		return 1;
 	}
 
-	int CConverter::Convert(char *pNalu, int nNaluSize)
+	int CConverter::ConvertH264(char *pNalu, int nNaluSize)
 	{
 		if (pNalu == NULL || nNaluSize <= 4)
 			return 0;
@@ -67,13 +70,13 @@ namespace Cnvt
 		}
 		if (_pSPS != NULL && _pPPS != NULL && _bWriteAVCSeqHeader == 0)
 		{
-			WriteHeader();
+			WriteH264Header();
 			_bWriteAVCSeqHeader = 1;
 		}
 		if (_bWriteAVCSeqHeader == 0)
 			return 1;
 
-		WriteFrame(pNalu, nNaluSize);
+		WriteH264Frame(pNalu, nNaluSize);
 
 		//_fileOut.write((char *)pNalu, nNaluSize);
 
@@ -85,7 +88,11 @@ namespace Cnvt
 		pFlvHeader[0] = 'F';
 		pFlvHeader[1] = 'L';
 		pFlvHeader[2] = 'V';
-		pFlvHeader[3] = 0x01;
+		pFlvHeader[3] = 0;
+		if (_bHaveVideo!=0)
+			pFlvHeader[3] |= 0x01;
+		if (_bHaveAudio != 0)
+			pFlvHeader[3] |= 0x04;
 		pFlvHeader[4] = 0x01;
 
 		unsigned int size = 9;
@@ -93,7 +100,7 @@ namespace Cnvt
 		memcpy(pFlvHeader + 5, size_u4._u, sizeof(unsigned int));
 	}
 
-	void CConverter::WriteHeader()
+	void CConverter::WriteH264Header()
 	{
 		_fileOut.write((char *)_FlvHeader, 9);
 
@@ -143,7 +150,7 @@ namespace Cnvt
 		_nPrevTagSize = 11 + nDataSize;
 	}
 
-	void CConverter::WriteFrame(char *pNalu, int nNaluSize)
+	void CConverter::WriteH264Frame(char *pNalu, int nNaluSize)
 	{
 		int nNaluType = pNalu[4] & 0x1f;
 		if (nNaluType == 7 || nNaluType == 8)
@@ -182,7 +189,7 @@ namespace Cnvt
 		_nPrevTagSize = 11 + nDataSize;
 	}
 
-	void CConverter::WriteEndofSeq()
+	void CConverter::WriteH264EndofSeq()
 	{
 		u4 prev_u4(_nPrevTagSize);
 		Write(prev_u4);

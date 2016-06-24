@@ -36,16 +36,18 @@ namespace Cnvt
 		CConverter();
 		virtual ~CConverter();
 
-		int Open(std::string strFlvFile);
+		int Open(std::string strFlvFile, int bHaveAudio=0, int bHaveVideo=1);
 		int Close();
 
-		int Convert(char *pNalu, int nNaluSize);
+		int ConvertH264(char *pNalu, int nNaluSize);
 
 	private:
 		void MakeFlvHeader(unsigned char *pFlvHeader);
-		void WriteHeader();
-		void WriteFrame(char *pNalu, int nNaluSize);
-		void WriteEndofSeq();
+
+		// h.264
+		void WriteH264Header();
+		void WriteH264Frame(char *pNalu, int nNaluSize);
+		void WriteH264EndofSeq();
 
 		void Write(unsigned char u) { _fileOut.write((char *)&u, 1); }
 		void Write(u4 u) { _fileOut.write((char *)u._u, 4); }
@@ -63,6 +65,9 @@ namespace Cnvt
 
 	private:
 		std::fstream _fileOut;
+
+	private:
+		int _bHaveAudio, _bHaveVideo;
 
 	};
 

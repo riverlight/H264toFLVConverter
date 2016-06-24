@@ -8,6 +8,7 @@ using namespace std;
 using namespace Cnvt;
 
 fstream g_fileIn;
+int g_mode = 0;
 CConverter g_cnvt;
 
 unsigned char *g_pBufferIn, *g_pBufferOut;
@@ -15,7 +16,7 @@ int g_nFileSize = 0;
 
 int Initialize(int argc, char *argv[]);
 int Release();
-int Convert();
+int ConvertH264();
 
 
 
@@ -23,15 +24,18 @@ int main(int argc, char *argv[])
 {
 	cout << "Hi, this is a VideoJJ SEI splitter sample!\n";
 
-	if (argc != 3)
+	if (argc != 4)
 	{
-		cout << "Usage:\n\t" << "vjjSEI_splitter" << " [h.264 file with vjj SEI]" << " [output file]" << endl;
+		cout << "Usage:\n\t" << "converter.exe" << " [mode] [h.264 or aac file]" << " [output file]" << endl;
+		cout << "\tmode = 1 is h.264 to flv" << endl;
+		cout << "\tmode = 2 is aac to flv\n" << endl;
 		return 0;
 	}
 	if (Initialize(argc, argv) == 0)
 		return 0;
 
-	Convert();
+	if (g_mode==1)
+		ConvertH264();
 
 	Release();
 
@@ -40,13 +44,21 @@ int main(int argc, char *argv[])
 
 int Initialize(int argc, char *argv[])
 {
-	g_fileIn.open(argv[1], ios::binary | _IOS_Nocreate | ios::in);
+	g_mode = atoi(argv[1]);
+	if (g_mode != 1 && g_mode != 2)
+	{
+		cout << "mode must be 1 or 2" << endl;
+		return 0;
+	}
+
+	g_fileIn.open(argv[2], ios::binary | _IOS_Nocreate | ios::in);
 	if (!g_fileIn)
 	{
 		cout << argv[1] << " can not be open!\n";
 		return 0;
 	}
-	if (g_cnvt.Open(argv[2]) == 0)
+	
+	if (g_cnvt.Open(argv[3]) == 0)
 		return 0;
 
 	g_fileIn.seekg(0, ios::end);
@@ -77,7 +89,7 @@ int Release()
 	return 1;
 }
 
-int Convert()
+int ConvertH264()
 {
 	int nOffset = 0;
 	int count = 0;
@@ -88,7 +100,7 @@ int Convert()
 		if (Cnvt::GetOneNalu(g_pBufferIn + nOffset, g_nFileSize - nOffset, g_pBufferOut, nNaluSize) == 0)
 			break;
 
-		g_cnvt.Convert((char *)g_pBufferOut, nNaluSize);
+		g_cnvt.ConvertH264((char *)g_pBufferOut, nNaluSize);
 
 		nOffset += nNaluSize;
 		if (nOffset >= g_nFileSize - 4)
