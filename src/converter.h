@@ -40,6 +40,7 @@ namespace Cnvt
 		int Close();
 
 		int ConvertH264(char *pNalu, int nNaluSize);
+		int ConvertAAC(char *pAAC, int nAACFrameSize);
 
 	private:
 		void MakeFlvHeader(unsigned char *pFlvHeader);
@@ -48,6 +49,10 @@ namespace Cnvt
 		void WriteH264Header();
 		void WriteH264Frame(char *pNalu, int nNaluSize);
 		void WriteH264EndofSeq();
+
+		// aac
+		void WriteAACHeader();
+		void WriteAACFrame(char *pFrame, int nFrameSize);
 
 		void Write(unsigned char u) { _fileOut.write((char *)&u, 1); }
 		void Write(u4 u) { _fileOut.write((char *)u._u, 4); }
@@ -62,6 +67,13 @@ namespace Cnvt
 		int _nPrevTagSize;
 		unsigned int _nTimeStamp;
 		int _nStreamID;
+
+		unsigned char *_pAudioSpecificConfig;
+		int _nAudioConfigSize;
+		int _aacProfile;
+		int _sampleRateIndex;
+		int _channelConfig;
+		int _bWriteAACSeqHeader;
 
 	private:
 		std::fstream _fileOut;

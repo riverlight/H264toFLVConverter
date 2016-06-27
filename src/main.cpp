@@ -8,6 +8,7 @@ using namespace std;
 using namespace Cnvt;
 
 fstream g_fileIn;
+char g_flvFile[260];
 int g_mode = 0;
 CConverter g_cnvt;
 
@@ -17,7 +18,7 @@ int g_nFileSize = 0;
 int Initialize(int argc, char *argv[]);
 int Release();
 int ConvertH264();
-
+int ConvertAAC();
 
 
 int main(int argc, char *argv[])
@@ -36,6 +37,8 @@ int main(int argc, char *argv[])
 
 	if (g_mode==1)
 		ConvertH264();
+	if (g_mode == 2)
+		ConvertAAC();
 
 	Release();
 
@@ -58,8 +61,7 @@ int Initialize(int argc, char *argv[])
 		return 0;
 	}
 	
-	if (g_cnvt.Open(argv[3]) == 0)
-		return 0;
+	strcpy_s(g_flvFile, argv[3]);
 
 	g_fileIn.seekg(0, ios::end);
 	std::streampos ps = g_fileIn.tellg();
@@ -82,8 +84,7 @@ int Release()
 {
 	delete g_pBufferIn;
 	delete g_pBufferOut;
-
-	g_cnvt.Close();
+	
 	g_fileIn.close();
 
 	return 1;
@@ -93,6 +94,9 @@ int ConvertH264()
 {
 	int nOffset = 0;
 	int count = 0;
+
+	if (g_cnvt.Open(g_flvFile) == 0)
+		return 0;
 
 	while (1)
 	{
@@ -107,6 +111,34 @@ int ConvertH264()
 			break;
 		count++;
 	}
+	g_cnvt.Close();
+
+	return 1;
+}
+
+int ConvertAAC()
+{
+	int nOffset = 0;
+	int count = 0;
+
+	if (g_cnvt.Open(g_flvFile, 1, 0) == 0)
+		return 0;
+
+	while (1)
+	{
+		int nAACFrameSize = 0;
+		if (Cnvt::GetOneAACFrame(g_pBufferIn + nOffset, g_nFileSize - nOffset, g_pBufferOut, nAACFrameSize) == 0)
+			break;
+
+		printf("nAACFrameSize = %d\n", nAACFrameSize);
+		g_cnvt.ConvertAAC((char *)g_pBufferOut, nAACFrameSize);
+
+		nOffset += nAACFrameSize;
+		if (nOffset >= g_nFileSize - 4)
+			break;
+		count++;
+	}
+	g_cnvt.Close();
 
 	return 1;
 }

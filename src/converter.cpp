@@ -16,6 +16,13 @@ namespace Cnvt
 		_nPrevTagSize = 0;
 		_nTimeStamp = 0;
 		_nStreamID = 0;
+
+		_pAudioSpecificConfig = NULL;
+		_nAudioConfigSize = 0;
+		_aacProfile = 0;
+		_sampleRateIndex = 0;
+		_channelConfig = 0;
+		_bWriteAACSeqHeader = 0;
 	}
 
 	CConverter::~CConverter()
@@ -78,8 +85,6 @@ namespace Cnvt
 
 		WriteH264Frame(pNalu, nNaluSize);
 
-		//_fileOut.write((char *)pNalu, nNaluSize);
-
 		return 1;
 	}
 
@@ -98,12 +103,12 @@ namespace Cnvt
 		unsigned int size = 9;
 		u4 size_u4(size);
 		memcpy(pFlvHeader + 5, size_u4._u, sizeof(unsigned int));
+
+		_fileOut.write((char *)_FlvHeader, 9);
 	}
 
 	void CConverter::WriteH264Header()
 	{
-		_fileOut.write((char *)_FlvHeader, 9);
-
 		u4 prev_u4(_nPrevTagSize);
 		_fileOut.write((char *)prev_u4._u, 4);
 
@@ -211,5 +216,95 @@ namespace Cnvt
 
 		u3 com_time_u3(0);
 		Write(com_time_u3);
+	}
+
+	int CConverter::ConvertAAC(char *pAAC, int nAACFrameSize)
+	{
+		if (pAAC == NULL || nAACFrameSize <= 7)
+			return 0;
+
+		if (_pAudioSpecificConfig == NULL)
+		{
+			_pAudioSpecificConfig = new unsigned char[2];
+			_nAudioConfigSize = 2;
+
+			unsigned char *p = (unsigned char *)pAAC;
+			_aacProfile = (p[2] >> 6) + 1;
+			_sampleRateIndex = (p[2] >> 2) & 0x0f;
+			_channelConfig = ((p[2] & 0x01) << 2) + (p[3]>>6);
+
+			_pAudioSpecificConfig[0] = (_aacProfile << 3) + (_sampleRateIndex>>1);
+			_pAudioSpecificConfig[1] = ((_sampleRateIndex&0x01)<<7) + (_channelConfig<<3);
+		}
+		if (_pAudioSpecificConfig != NULL & _bWriteAACSeqHeader == 0)
+		{
+			WriteAACHeader();
+			_bWriteAACSeqHeader = 1;
+		}
+		if (_bWriteAACSeqHeader == 0)
+			return 1;
+
+		WriteAACFrame(pAAC, nAACFrameSize);
+
+		return 1;
+	}
+
+	void CConverter::WriteAACHeader()
+	{
+		u4 prev_u4(_nPrevTagSize);
+		_fileOut.write((char *)prev_u4._u, 4);
+
+		char cTagType = 0x08;
+		_fileOut.write(&cTagType, 1);
+		int nDataSize = 1 + 1 + 2;
+
+		u3 datasize_u3(nDataSize);
+		_fileOut.write((char *)datasize_u3._u, 3);
+
+		u3 tt_u3(_nTimeStamp);
+		_fileOut.write((char *)tt_u3._u, 3);
+
+		unsigned char cTTex = _nTimeStamp >> 24;
+		_fileOut.write((char *)&cTTex, 1);
+
+		u3 sid_u3(_nStreamID);
+		_fileOut.write((char *)sid_u3._u, 3);
+
+		unsigned char cAudioParam = 0xAF;
+		_fileOut.write((char *)&cAudioParam, 1);
+		unsigned char cAACPacketType = 0; /* seq header */
+		_fileOut.write((char *)&cAACPacketType, 1);
+
+		_fileOut.write((char *)_pAudioSpecificConfig, 2);
+
+		_nPrevTagSize = 11 + nDataSize;
+	}
+
+	void CConverter::WriteAACFrame(char *pFrame, int nFrameSize)
+	{
+		u4 prev_u4(_nPrevTagSize);
+		Write(prev_u4);
+
+		Write(0x08);
+		int nDataSize;
+		nDataSize = 1 + 1 + (nFrameSize - 7);
+		u3 datasize_u3(nDataSize);
+		Write(datasize_u3);
+		u3 tt_u3(_nTimeStamp);
+		Write(tt_u3);
+		Write(unsigned char(_nTimeStamp >> 24));
+
+		u3 sid(_nStreamID);
+		Write(sid);
+
+		unsigned char cAudioParam = 0xAF;
+		_fileOut.write((char *)&cAudioParam, 1);
+		unsigned char cAACPacketType = 1; /* AAC raw data */
+		_fileOut.write((char *)&cAACPacketType, 1);
+
+		_fileOut.write((char *)pFrame + 7, nFrameSize - 7);
+
+		_nTimeStamp += double(1024 * 1000) / double(44100);
+		_nPrevTagSize = 11 + nDataSize;
 	}
 }

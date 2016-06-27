@@ -59,4 +59,21 @@ namespace Cnvt
 		
 		return 1;
 	}
+
+	int GetOneAACFrame(unsigned char *pBufIn, int nInSize, unsigned char *pAACFrame, int &nAACFrameSize)
+	{
+		unsigned char *p = pBufIn;
+
+		if (nInSize <= 7)
+			return 0;
+
+		int nFrameSize = ((p[3] & 0x3) << 11) + (p[4] << 3) + (p[5] >> 5);
+		if (nInSize < nFrameSize)
+			return 0;
+
+		nAACFrameSize = nFrameSize;
+		memcpy(pAACFrame, pBufIn, nFrameSize);
+
+		return 1;
+	}
 }
