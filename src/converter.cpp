@@ -43,14 +43,16 @@ namespace Cnvt
 		return 1;
 	}
 
-	int CConverter::Close(unsigned int nTimeStamp)
+	int CConverter::Close()
 	{
 		if (_pSPS != NULL)
 			delete _pSPS;
 		if (_pPPS != NULL)
 			delete _pPPS;
 		
-		WriteH264EndofSeq(nTimeStamp);
+		if (_bHaveVideo!=0)
+			WriteH264EndofSeq();
+
 		_fileOut.close();
 
 		return 1;
@@ -58,6 +60,8 @@ namespace Cnvt
 
 	int CConverter::ConvertH264(char *pNalu, int nNaluSize, unsigned int nTimeStamp)
 	{
+		_nVideoTimeStamp = nTimeStamp;
+
 		if (pNalu == NULL || nNaluSize <= 4)
 			return 0;
 
@@ -191,7 +195,7 @@ namespace Cnvt
 		_nPrevTagSize = 11 + nDataSize;
 	}
 
-	void CConverter::WriteH264EndofSeq(unsigned int nTimeStamp)
+	void CConverter::WriteH264EndofSeq()
 	{
 		u4 prev_u4(_nPrevTagSize);
 		Write(prev_u4);
@@ -201,9 +205,9 @@ namespace Cnvt
 		nDataSize = 1 + 1 + 3;
 		u3 datasize_u3(nDataSize);
 		Write(datasize_u3);
-		u3 tt_u3(nTimeStamp);
+		u3 tt_u3(_nVideoTimeStamp);
 		Write(tt_u3);
-		Write(unsigned char(nTimeStamp >> 24));
+		Write(unsigned char(_nVideoTimeStamp >> 24));
 
 		u3 sid(_nStreamID);
 		Write(sid);

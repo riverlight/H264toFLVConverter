@@ -114,7 +114,7 @@ int ConvertH264()
 			break;
 		count++;
 	}
-	g_cnvt.Close(nTimeStamp);
+	g_cnvt.Close();
 
 	return 1;
 }
@@ -143,7 +143,7 @@ int ConvertAAC()
 			break;
 		count++;
 	}
-	g_cnvt.Close(nTimeStamp);
+	g_cnvt.Close();
 
 	return 1;
 }

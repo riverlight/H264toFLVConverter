@@ -37,7 +37,7 @@ namespace Cnvt
 		virtual ~CConverter();
 
 		int Open(std::string strFlvFile, int bHaveAudio=0, int bHaveVideo=1);
-		int Close(unsigned int nTimeStamp);
+		int Close();
 
 		int ConvertH264(char *pNalu, int nNaluSize, unsigned int nTimeStamp);
 		int ConvertAAC(char *pAAC, int nAACFrameSize, unsigned int nTimeStamp);
@@ -48,7 +48,7 @@ namespace Cnvt
 		// h.264
 		void WriteH264Header(unsigned int nTimeStamp);
 		void WriteH264Frame(char *pNalu, int nNaluSize, unsigned int nTimeStamp);
-		void WriteH264EndofSeq(unsigned int nTimeStamp);
+		void WriteH264EndofSeq();
 
 		// aac
 		void WriteAACHeader(unsigned int nTimeStamp);
@@ -66,6 +66,7 @@ namespace Cnvt
 		int _bWriteAVCSeqHeader;
 		int _nPrevTagSize;
 		int _nStreamID;
+		int _nVideoTimeStamp;
 
 		unsigned char *_pAudioSpecificConfig;
 		int _nAudioConfigSize;
