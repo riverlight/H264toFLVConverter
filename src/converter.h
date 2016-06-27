@@ -37,22 +37,22 @@ namespace Cnvt
 		virtual ~CConverter();
 
 		int Open(std::string strFlvFile, int bHaveAudio=0, int bHaveVideo=1);
-		int Close();
+		int Close(unsigned int nTimeStamp);
 
-		int ConvertH264(char *pNalu, int nNaluSize);
-		int ConvertAAC(char *pAAC, int nAACFrameSize);
+		int ConvertH264(char *pNalu, int nNaluSize, unsigned int nTimeStamp);
+		int ConvertAAC(char *pAAC, int nAACFrameSize, unsigned int nTimeStamp);
 
 	private:
 		void MakeFlvHeader(unsigned char *pFlvHeader);
 
 		// h.264
-		void WriteH264Header();
-		void WriteH264Frame(char *pNalu, int nNaluSize);
-		void WriteH264EndofSeq();
+		void WriteH264Header(unsigned int nTimeStamp);
+		void WriteH264Frame(char *pNalu, int nNaluSize, unsigned int nTimeStamp);
+		void WriteH264EndofSeq(unsigned int nTimeStamp);
 
 		// aac
-		void WriteAACHeader();
-		void WriteAACFrame(char *pFrame, int nFrameSize);
+		void WriteAACHeader(unsigned int nTimeStamp);
+		void WriteAACFrame(char *pFrame, int nFrameSize, unsigned int nTimeStamp);
 
 		void Write(unsigned char u) { _fileOut.write((char *)&u, 1); }
 		void Write(u4 u) { _fileOut.write((char *)u._u, 4); }
@@ -65,7 +65,6 @@ namespace Cnvt
 		int _nSPSSize, _nPPSSize;
 		int _bWriteAVCSeqHeader;
 		int _nPrevTagSize;
-		unsigned int _nTimeStamp;
 		int _nStreamID;
 
 		unsigned char *_pAudioSpecificConfig;

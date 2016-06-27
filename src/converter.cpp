@@ -14,7 +14,6 @@ namespace Cnvt
 		_nPPSSize = 0;
 		_bWriteAVCSeqHeader = 0;
 		_nPrevTagSize = 0;
-		_nTimeStamp = 0;
 		_nStreamID = 0;
 
 		_pAudioSpecificConfig = NULL;
@@ -44,20 +43,20 @@ namespace Cnvt
 		return 1;
 	}
 
-	int CConverter::Close()
+	int CConverter::Close(unsigned int nTimeStamp)
 	{
 		if (_pSPS != NULL)
 			delete _pSPS;
 		if (_pPPS != NULL)
 			delete _pPPS;
-
-		WriteH264EndofSeq();
+		
+		WriteH264EndofSeq(nTimeStamp);
 		_fileOut.close();
 
 		return 1;
 	}
 
-	int CConverter::ConvertH264(char *pNalu, int nNaluSize)
+	int CConverter::ConvertH264(char *pNalu, int nNaluSize, unsigned int nTimeStamp)
 	{
 		if (pNalu == NULL || nNaluSize <= 4)
 			return 0;
@@ -77,13 +76,13 @@ namespace Cnvt
 		}
 		if (_pSPS != NULL && _pPPS != NULL && _bWriteAVCSeqHeader == 0)
 		{
-			WriteH264Header();
+			WriteH264Header(nTimeStamp);
 			_bWriteAVCSeqHeader = 1;
 		}
 		if (_bWriteAVCSeqHeader == 0)
 			return 1;
 
-		WriteH264Frame(pNalu, nNaluSize);
+		WriteH264Frame(pNalu, nNaluSize, nTimeStamp);
 
 		return 1;
 	}
@@ -107,7 +106,7 @@ namespace Cnvt
 		_fileOut.write((char *)_FlvHeader, 9);
 	}
 
-	void CConverter::WriteH264Header()
+	void CConverter::WriteH264Header(unsigned int nTimeStamp)
 	{
 		u4 prev_u4(_nPrevTagSize);
 		_fileOut.write((char *)prev_u4._u, 4);
@@ -119,10 +118,10 @@ namespace Cnvt
 		u3 datasize_u3(nDataSize);
 		_fileOut.write((char *)datasize_u3._u, 3);
 
-		u3 tt_u3(_nTimeStamp);
+		u3 tt_u3(nTimeStamp);
 		_fileOut.write((char *)tt_u3._u, 3);
 
-		unsigned char cTTex = _nTimeStamp >> 24;
+		unsigned char cTTex = nTimeStamp >> 24;
 		_fileOut.write((char *)&cTTex, 1);
 
 		u3 sid_u3(_nStreamID);
@@ -155,7 +154,7 @@ namespace Cnvt
 		_nPrevTagSize = 11 + nDataSize;
 	}
 
-	void CConverter::WriteH264Frame(char *pNalu, int nNaluSize)
+	void CConverter::WriteH264Frame(char *pNalu, int nNaluSize, unsigned int nTimeStamp)
 	{
 		int nNaluType = pNalu[4] & 0x1f;
 		if (nNaluType == 7 || nNaluType == 8)
@@ -169,9 +168,9 @@ namespace Cnvt
 		nDataSize = 1 + 1 + 3 + 4 + (nNaluSize - 4);
 		u3 datasize_u3(nDataSize);
 		Write(datasize_u3);
-		u3 tt_u3(_nTimeStamp);
+		u3 tt_u3(nTimeStamp);
 		Write(tt_u3);
-		Write(unsigned char(_nTimeStamp >> 24));
+		Write(unsigned char(nTimeStamp >> 24));
 
 		u3 sid(_nStreamID);
 		Write(sid);
@@ -189,12 +188,10 @@ namespace Cnvt
 
 		_fileOut.write((char *)(pNalu + 4), nNaluSize - 4);
 
-		if (nNaluType == 1 || nNaluType == 5)
-			_nTimeStamp += 40;
 		_nPrevTagSize = 11 + nDataSize;
 	}
 
-	void CConverter::WriteH264EndofSeq()
+	void CConverter::WriteH264EndofSeq(unsigned int nTimeStamp)
 	{
 		u4 prev_u4(_nPrevTagSize);
 		Write(prev_u4);
@@ -204,9 +201,9 @@ namespace Cnvt
 		nDataSize = 1 + 1 + 3;
 		u3 datasize_u3(nDataSize);
 		Write(datasize_u3);
-		u3 tt_u3(_nTimeStamp);
+		u3 tt_u3(nTimeStamp);
 		Write(tt_u3);
-		Write(unsigned char(_nTimeStamp >> 24));
+		Write(unsigned char(nTimeStamp >> 24));
 
 		u3 sid(_nStreamID);
 		Write(sid);
@@ -218,7 +215,7 @@ namespace Cnvt
 		Write(com_time_u3);
 	}
 
-	int CConverter::ConvertAAC(char *pAAC, int nAACFrameSize)
+	int CConverter::ConvertAAC(char *pAAC, int nAACFrameSize, unsigned int nTimeStamp)
 	{
 		if (pAAC == NULL || nAACFrameSize <= 7)
 			return 0;
@@ -238,18 +235,18 @@ namespace Cnvt
 		}
 		if (_pAudioSpecificConfig != NULL & _bWriteAACSeqHeader == 0)
 		{
-			WriteAACHeader();
+			WriteAACHeader(nTimeStamp);
 			_bWriteAACSeqHeader = 1;
 		}
 		if (_bWriteAACSeqHeader == 0)
 			return 1;
 
-		WriteAACFrame(pAAC, nAACFrameSize);
+		WriteAACFrame(pAAC, nAACFrameSize, nTimeStamp);
 
 		return 1;
 	}
 
-	void CConverter::WriteAACHeader()
+	void CConverter::WriteAACHeader(unsigned int nTimeStamp)
 	{
 		u4 prev_u4(_nPrevTagSize);
 		_fileOut.write((char *)prev_u4._u, 4);
@@ -261,10 +258,10 @@ namespace Cnvt
 		u3 datasize_u3(nDataSize);
 		_fileOut.write((char *)datasize_u3._u, 3);
 
-		u3 tt_u3(_nTimeStamp);
+		u3 tt_u3(nTimeStamp);
 		_fileOut.write((char *)tt_u3._u, 3);
 
-		unsigned char cTTex = _nTimeStamp >> 24;
+		unsigned char cTTex = nTimeStamp >> 24;
 		_fileOut.write((char *)&cTTex, 1);
 
 		u3 sid_u3(_nStreamID);
@@ -280,7 +277,7 @@ namespace Cnvt
 		_nPrevTagSize = 11 + nDataSize;
 	}
 
-	void CConverter::WriteAACFrame(char *pFrame, int nFrameSize)
+	void CConverter::WriteAACFrame(char *pFrame, int nFrameSize, unsigned int nTimeStamp)
 	{
 		u4 prev_u4(_nPrevTagSize);
 		Write(prev_u4);
@@ -290,9 +287,9 @@ namespace Cnvt
 		nDataSize = 1 + 1 + (nFrameSize - 7);
 		u3 datasize_u3(nDataSize);
 		Write(datasize_u3);
-		u3 tt_u3(_nTimeStamp);
+		u3 tt_u3(nTimeStamp);
 		Write(tt_u3);
-		Write(unsigned char(_nTimeStamp >> 24));
+		Write(unsigned char(nTimeStamp >> 24));
 
 		u3 sid(_nStreamID);
 		Write(sid);
@@ -304,7 +301,6 @@ namespace Cnvt
 
 		_fileOut.write((char *)pFrame + 7, nFrameSize - 7);
 
-		_nTimeStamp += double(1024 * 1000) / double(44100);
 		_nPrevTagSize = 11 + nDataSize;
 	}
 }

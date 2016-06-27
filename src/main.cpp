@@ -98,20 +98,23 @@ int ConvertH264()
 	if (g_cnvt.Open(g_flvFile) == 0)
 		return 0;
 
+	unsigned int nTimeStamp = 0;
 	while (1)
 	{
 		int nNaluSize = 0;
 		if (Cnvt::GetOneNalu(g_pBufferIn + nOffset, g_nFileSize - nOffset, g_pBufferOut, nNaluSize) == 0)
 			break;
 
-		g_cnvt.ConvertH264((char *)g_pBufferOut, nNaluSize);
+		g_cnvt.ConvertH264((char *)g_pBufferOut, nNaluSize, nTimeStamp);
 
+		if (g_pBufferOut[4] != 0x67 && g_pBufferOut[4]!=0x68)
+			nTimeStamp += 33;
 		nOffset += nNaluSize;
 		if (nOffset >= g_nFileSize - 4)
 			break;
 		count++;
 	}
-	g_cnvt.Close();
+	g_cnvt.Close(nTimeStamp);
 
 	return 1;
 }
@@ -124,6 +127,7 @@ int ConvertAAC()
 	if (g_cnvt.Open(g_flvFile, 1, 0) == 0)
 		return 0;
 
+	unsigned int nTimeStamp = 0;
 	while (1)
 	{
 		int nAACFrameSize = 0;
@@ -131,14 +135,15 @@ int ConvertAAC()
 			break;
 
 		printf("nAACFrameSize = %d\n", nAACFrameSize);
-		g_cnvt.ConvertAAC((char *)g_pBufferOut, nAACFrameSize);
+		g_cnvt.ConvertAAC((char *)g_pBufferOut, nAACFrameSize, nTimeStamp);
 
+		nTimeStamp += double(1024*1000) / double(44100);
 		nOffset += nAACFrameSize;
 		if (nOffset >= g_nFileSize - 4)
 			break;
 		count++;
 	}
-	g_cnvt.Close();
+	g_cnvt.Close(nTimeStamp);
 
 	return 1;
 }

@@ -5,6 +5,10 @@ It seems that FFMPEG has a bug for H.264 to FLV.
 So I write a converter 
 ----------------------------------------
 
+v 0.02a 	2016.06.27
+1. 时间戳的问题解决了
+
+
 v 0.02 		2016.06.27
 1. 现在支持 aac 的转换了，不过时间戳依然有问题，打算下个补丁搞定
 
