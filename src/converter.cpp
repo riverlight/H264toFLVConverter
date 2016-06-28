@@ -96,12 +96,12 @@ namespace Cnvt
 		pFlvHeader[0] = 'F';
 		pFlvHeader[1] = 'L';
 		pFlvHeader[2] = 'V';
-		pFlvHeader[3] = 0;
+		pFlvHeader[3] = 1;
+		pFlvHeader[4] = 0x0;
 		if (_bHaveVideo!=0)
-			pFlvHeader[3] |= 0x01;
+			pFlvHeader[4] |= 0x01;
 		if (_bHaveAudio != 0)
-			pFlvHeader[3] |= 0x04;
-		pFlvHeader[4] = 0x01;
+			pFlvHeader[4] |= 0x04;
 
 		unsigned int size = 9;
 		u4 size_u4(size);
