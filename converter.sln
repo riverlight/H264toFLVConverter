@@ -4,6 +4,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "converter", "converter.vcxproj", "{1EEC5E58-6F3D-4691-B867-7D86902FD566}"
+	ProjectSection(ProjectDependencies) = postProject
+		{18E0F3AD-C9FB-4C20-9015-215FAB23A004} = {18E0F3AD-C9FB-4C20-9015-215FAB23A004}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mediaCnvt", "mediaCnvt\mediaCnvt.vcxproj", "{18E0F3AD-C9FB-4C20-9015-215FAB23A004}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +20,10 @@ Global
 		{1EEC5E58-6F3D-4691-B867-7D86902FD566}.Debug|Win32.Build.0 = Debug|Win32
 		{1EEC5E58-6F3D-4691-B867-7D86902FD566}.Release|Win32.ActiveCfg = Release|Win32
 		{1EEC5E58-6F3D-4691-B867-7D86902FD566}.Release|Win32.Build.0 = Release|Win32
+		{18E0F3AD-C9FB-4C20-9015-215FAB23A004}.Debug|Win32.ActiveCfg = Debug|Win32
+		{18E0F3AD-C9FB-4C20-9015-215FAB23A004}.Debug|Win32.Build.0 = Debug|Win32
+		{18E0F3AD-C9FB-4C20-9015-215FAB23A004}.Release|Win32.ActiveCfg = Release|Win32
+		{18E0F3AD-C9FB-4C20-9015-215FAB23A004}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

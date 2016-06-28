@@ -5,6 +5,18 @@ It seems that FFMPEG has a bug for H.264 to FLV.
 So I write a converter 
 ----------------------------------------
 
+
+Usage:
+	aac -> flv ： converter 2 ffplay.aac cnvta.flv 
+	h.264 -> flv : converter 1 test.264 test.flv
+
+
+----------------------------------------
+
+
+v 0.03 		2016.06.28
+1. 把 converter 做成 lib 了
+
 v 0.02b 	2016.06.27
 1. 调整了 close 接口
 
